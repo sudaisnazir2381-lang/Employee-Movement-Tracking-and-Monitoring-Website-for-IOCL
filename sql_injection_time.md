@@ -94,10 +94,73 @@ The code directly inserts user-provided data from `$_POST` (e.g., `spassword='$o
 
 `username` is injectable.
 
+## Databases Information Extracted
+
 ### Screenshot
 
 <img width="252" height="56" alt="proof" src="https://github.com/user-attachments/assets/4da75e16-8c9f-4a5a-9267-a96abdee8169" />
 
+---
+
+## Tables Information Extracted
+
+<img width="357" height="120" alt="tables" src="https://github.com/user-attachments/assets/4b98fb43-05e2-46f6-b1a9-38cc9b0088c4" />
+
+
+---
+
+# Suggested Remediation
+
+- Implement Prepared Statements.
+- Input Validation.
+
+---
+
+# Security Recommendations
+
+- Implement principle of least privilege.
+- Encrypt sensitive data storage.
+- Implement WAF protection.
+- Conduct regular security audits.
+- Use ORM frameworks for database operations.
+
+---
+
+# Additional Information
+
+- Refer to the OWASP SQL Injection Prevention Guide.
+- Consider using modern frameworks like MyBatis or Hibernate.
+- Implement logging and monitoring mechanisms.
+
+---
+
+# References
+
+- OWASP SQL Injection Prevention Cheat Sheet
+- CWE-89: SQL Injection
+- CERT Oracle Secure Coding Standard for Java
+
+---
+
+# Severity Assessment
+
+> The severity of this vulnerability is HIGH, and immediate remediation is recommended as it poses a serious threat to the system's data security.
+
+---
+
+# Mitigation Timeline
+
+| Timeline | Action |
+|-----------|---------|
+| **Immediate** | Implement prepared statements |
+| **Short-term** | Add input validation |
+| **Long-term** | Consider migrating to an ORM framework |
+
+---
+
+# Conclusion
+
+This vulnerability requires immediate attention due to its potential for significant data breach and system compromise.
 
 
 
