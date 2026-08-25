@@ -94,6 +94,11 @@ The code directly inserts user-provided data from `$_POST` (e.g., `spassword='$o
 
 `username` is injectable.
 
+### Screenshot
+
+<img width="1104" height="59" alt="injectable" src="https://github.com/user-attachments/assets/0c71e2f0-a1ca-4374-bb6c-4b7d153aecea" />
+
+
 ## Databases Information Extracted
 
 ### Screenshot
