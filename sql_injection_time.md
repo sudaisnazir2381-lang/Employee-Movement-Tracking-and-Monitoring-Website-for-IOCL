@@ -1,171 +1,127 @@
-# Title: [sql-injection] in [Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL] <= [v1.0]
+# CVE-2026-105776: Time-Based SQL Injection in Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL 1.0
 
-**BUG Author:** Sudais Nazir
+| | |
+|---|---|
+| **CVE** | CVE-2026-105776 ([NVD](https://nvd.nist.gov/vuln/detail/CVE-2026-105776) · [VulDB](https://vuldb.com/cve/CVE-2026-105776)) |
+| **Discovered by** | Sudais Nazir |
+| **Published** | October 2026 |
+| **Product** | [Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL](https://github.com/bhagya3929/Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL) (open-source PHP application) |
+| **Affected version** | <= 1.0 |
+| **Weakness** | CWE-89: SQL Injection |
+| **Severity** | High, CVSS 3.1 base score 7.3 |
+| **CVSS vector** | **[CHECK: copy the exact vector from the NVD/VulDB record]** |
 
 ---
 
-# Product Information
+## Summary
 
-- **Software Link:** https://github.com/bhagya3929/Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL
-- **Affected Version:** <= v1.0
-- **BUG Author:** Sudais Nazir
+The `username` parameter in `admin_transaction.php` is concatenated directly into an SQL query. An attacker can inject SQL and use time-based techniques to extract data from the database, including database and table names. No sanitization or prepared statements are used.
 
----
-
-# Vulnerability Details
+## Vulnerability Details
 
 | Field | Value |
-|---------|---------|
-| **Type** | Time Based SQL Injection |
+|---|---|
+| **Type** | Time-based blind SQL injection |
+| **Affected file** | `admin_transaction.php` |
 | **Affected URL** | `http://localhost/Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL/admin_transaction.php` |
-| **Vulnerable Parameter** | `username` |
+| **Vulnerable parameter** | `username` (HTTP **[FILL: POST/GET]**) |
+| **Authentication required** | **[FILL: Yes, which role / No]** |
 
-## Vulnerable Files
+## Root Cause
 
-| File Name | Path |
-|------------|------|
-| `admin_transaction.php` | `/Employee-Movement-Tracking-and-Monitoring-Website-for-IOCL/admin_transaction.php` |
+The value of `username` is placed straight into the query string, so anything the user types becomes part of the SQL statement.
 
+**[FILL: replace this block with the exact vulnerable lines from your screenshot]**
 
----
-
-# Vulnerability Type
-
-- **CWE:** CWE-89 (SQL Injection)
-- **Severity:** CRITICAL
-- **CVSS Score:** 9.1
-
----
-
-# Root Cause
-
-The code directly inserts user-provided data from `$_POST` (e.g., `spassword='$oldpass'`) into SQL queries without sanitization, allowing attackers to manipulate queries.
-
-## Screenshot
-
-<img width="833" height="116" alt="capture1" src="https://github.com/user-attachments/assets/bd06e702-964c-4461-8cbb-17b90872d5d4" />
-
-# Impact
-
-- Unauthorized access to database information.
-- Potential exposure of sensitive information (such as user passwords).
-- Possible database corruption or data manipulation.
-
----
-
-# Description
-
-## 1. Vulnerability Details
-
-- In this PHP code, the `username` parameter is directly concatenated into SQL Statement.
-- No input validation or escaping mechanisms implemented.
-
-## 2. Attack Vectors
-
-- Attackers can manipulate SQL query structure using special characters.
-- Additional information can be extracted using Time Based Payloads.
-- Database information can be obtained through Time Based injection.
-- Time based injection might reveal more information.
-
-## 3. Attack Payload Examples
-
-### SQL Payload
-
-```sql
-' AND (SELECT 3965 FROM (SELECT(SLEEP(5)))yPgs) AND 'Eryu'='Eryu
-
+```php
+$username = $_POST['username'];
+$query = "SELECT ... FROM ... WHERE username='$username' ...";
 ```
 
-`username` is injectable.
-<img width="1079" height="78" alt="proof" src="https://github.com/user-attachments/assets/056e86d0-96d8-40ac-9ef1-480b7deea90b" />
+The screenshot below shows the vulnerable code:
 
+![Root cause: vulnerable code](https://github.com/user-attachments/assets/bd06e702-964c-4461-8cbb-17b90872d5d4)
 
-# Proof of Concept
+## Proof of Concept
 
-## Information Extraction
+**Test environment:** PHP **[FILL version]**, MySQL/MariaDB **[FILL version]**, local XAMPP/LAMP install of the application, version 1.0.
 
-### Payload
+### Steps to reproduce
 
-```sql
-' AND (SELECT 2713 FROM (SELECT(SLEEP(5)))pQmt) AND 'cuFH'='cuFH
+1. Install the application locally **[FILL: and log in as ..., or note that no login is needed]**.
+2. Open `/admin_transaction.php`.
+3. Intercept the request with Burp Suite and send the following value in the `username` parameter:
+
+   ```
+   ' AND (SELECT 3965 FROM (SELECT(SLEEP(5)))yPgs) AND 'Eryu'='Eryu
+   ```
+
+4. Compare response times. A normal request returns in about **[FILL: e.g. 0.1] seconds**; the injected request is delayed by about **5 seconds**, which confirms the injected `SLEEP(5)` executed on the database.
+
+**[FILL: paste the full raw HTTP request from Burp here, with cookies redacted]**
+
+Request showing the payload in `username`:
+
+![Payload in the username parameter](https://github.com/user-attachments/assets/056e86d0-96d8-40ac-9ef1-480b7deea90b)
+
+Confirmation that `username` is injectable:
+
+![Injection confirmed](https://github.com/user-attachments/assets/0c71e2f0-a1ca-4374-bb6c-4b7d153aecea)
+
+### Data extraction
+
+Using the same injection point, I extracted the database names and then the table names, showing that arbitrary data in the database can be read.
+
+Database enumeration:
+
+![Database names extracted](https://github.com/user-attachments/assets/4da75e16-8c9f-4a5a-9267-a96abdee8169)
+
+Table enumeration:
+
+![Table names extracted](https://github.com/user-attachments/assets/4b98fb43-05e2-46f6-b1a9-38cc9b0088c4)
+
+## Impact
+
+Through this injection point, a user can read data from the application's database, which may include employee records and stored credentials. Impact is limited to what the database account can access. Reading data was demonstrated; modification of data was not tested.
+
+## Remediation
+
+Use prepared statements so user input is never treated as SQL (adjust the query to match the real one):
+
+```php
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
 ```
 
-### Result
+Additional hardening:
 
-`username` is injectable.
+- Run the application with a database account that has only the privileges it needs.
+- Validate the type and length of all submitted fields.
+- Store passwords with `password_hash()` and check them with `password_verify()`.
 
-### Screenshot
+## Evidence URLs
 
-<img width="1104" height="59" alt="injectable" src="https://github.com/user-attachments/assets/0c71e2f0-a1ca-4374-bb6c-4b7d153aecea" />
-
-
-## Databases Information Extracted
-
-### Screenshot
-
-<img width="252" height="56" alt="proof" src="https://github.com/user-attachments/assets/4da75e16-8c9f-4a5a-9267-a96abdee8169" />
-
----
-
-## Tables Information Extracted
-
-<img width="357" height="120" alt="tables" src="https://github.com/user-attachments/assets/4b98fb43-05e2-46f6-b1a9-38cc9b0088c4" />
-
+1. Root cause (vulnerable code): https://github.com/user-attachments/assets/bd06e702-964c-4461-8cbb-17b90872d5d4
+2. Payload in the `username` parameter: https://github.com/user-attachments/assets/056e86d0-96d8-40ac-9ef1-480b7deea90b
+3. Injection confirmed: https://github.com/user-attachments/assets/0c71e2f0-a1ca-4374-bb6c-4b7d153aecea
+4. Database names extracted: https://github.com/user-attachments/assets/4da75e16-8c9f-4a5a-9267-a96abdee8169
+5. Table names extracted: https://github.com/user-attachments/assets/4b98fb43-05e2-46f6-b1a9-38cc9b0088c4
 
 ---
 
-# Suggested Remediation
+## Disclosure Timeline
 
-- Implement Prepared Statements.
-- Input Validation.
+| Date | Event |
+|---|---|
+| **[FILL: date]** | Reported to **[FILL: VulDB / maintainer]** |
+| October 2026 | CVE-2026-105776 published |
 
----
+## References
 
-# Security Recommendations
-
-- Implement principle of least privilege.
-- Encrypt sensitive data storage.
-- Implement WAF protection.
-- Conduct regular security audits.
-- Use ORM frameworks for database operations.
-
----
-
-# Additional Information
-
-- Refer to the OWASP SQL Injection Prevention Guide.
-- Consider using modern frameworks like MyBatis or Hibernate.
-- Implement logging and monitoring mechanisms.
-
----
-
-# References
-
-- OWASP SQL Injection Prevention Cheat Sheet
-- CWE-89: SQL Injection
-- CERT Oracle Secure Coding Standard for Java
-
----
-
-# Severity Assessment
-
-> The severity of this vulnerability is HIGH, and immediate remediation is recommended as it poses a serious threat to the system's data security.
-
----
-
-# Mitigation Timeline
-
-| Timeline | Action |
-|-----------|---------|
-| **Immediate** | Implement prepared statements |
-| **Short-term** | Add input validation |
-| **Long-term** | Consider migrating to an ORM framework |
-
----
-
-# Conclusion
-
-This vulnerability requires immediate attention due to its potential for significant data breach and system compromise.
-
-
-
+- [NVD: CVE-2026-105776](https://nvd.nist.gov/vuln/detail/CVE-2026-105776)
+- [VulDB: CVE-2026-105776](https://vuldb.com/cve/CVE-2026-105776)
+- [OWASP SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
+- [CWE-89: SQL Injection](https://cwe.mitre.org/data/definitions/89.html)
+- [PHP Manual: Prepared statements](https://www.php.net/manual/en/mysqli.quickstart.prepared-statements.php)
