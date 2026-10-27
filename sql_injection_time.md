@@ -115,7 +115,7 @@ Additional hardening:
 
 | Date | Event |
 |---|---|
-| **[FILL: date]** | Reported to **[FILL: VulDB / maintainer]** |
+| **09/20/2026** | Reported to **VulDB** |
 | October 2026 | CVE-2026-105776 published |
 
 ## References
